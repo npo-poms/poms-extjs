@@ -1,0 +1,6 @@
+= POMS Extjs
+
+Many years ago, poms had an extjs backend. Some classes were reused in other projects (e.g. the images backend which still is in extjs).
+
+Java classes are shared with this.
+
