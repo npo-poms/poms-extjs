@@ -4,17 +4,18 @@
  */
 package nl.vpro.transfer.extjs.media;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
-import javax.xml.bind.annotation.*;
-
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
+import java.time.Duration;
+import java.time.Instant;
+import java.util.*;
+import javax.xml.bind.annotation.*;
+import lombok.Getter;
+import lombok.Setter;
 import nl.vpro.domain.media.*;
-import nl.vpro.domain.media.bind.DateToJsonTimestamp;
+import nl.vpro.jackson2.DurationToJsonTimestamp;
+ 
 import nl.vpro.domain.user.Broadcaster;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -33,36 +34,51 @@ import nl.vpro.domain.user.Broadcaster;
         })
 public class ScheduleEventView {
 
+    @Getter
     private String channel;
 
+    @Getter
     private String channelText;
 
+    @Getter
     private String net;
 
+    @Getter
     private String netText;
 
-    private Date start;
+    @Getter
+    @Setter
+    private Instant start;
 
-    @JsonSerialize(using = DateToJsonTimestamp.Serializer.class, include = JsonSerialize.Inclusion.NON_NULL)
-    @JsonDeserialize(using = DateToJsonTimestamp.Deserializer.class)
-    private Date duration;
+    @JsonSerialize(using = DurationToJsonTimestamp.Serializer.class)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonDeserialize(using = DurationToJsonTimestamp.Deserializer.class)
+    @Getter
+    private Duration duration;
 
+    @Getter
+    @Setter
     private Long mediaId;
 
+    @Getter
     private String title;
 
+    @Getter
     private String description;
 
+    @Getter
+    @Setter
     private boolean isRerun = false;
 
     @XmlElementWrapper(name = "broadcasters")
     @XmlElement(name = "broadcaster")
+    @Getter
     private final List<String> broadcasters = new ArrayList<>();
 
     private ScheduleEventView() {
     }
 
-    private ScheduleEventView(Channel channel, Net net, Date start) {
+    private ScheduleEventView(Channel channel, Net net, Instant start) {
         this.channel = channel.name();
         this.channelText = channel.toString();
         this.net = net == null ? null  : net.getId();
@@ -75,7 +91,7 @@ public class ScheduleEventView {
 
         ScheduleEventView simpleEvent = new ScheduleEventView(
             fullEvent.getChannel(), fullEvent.getNet(),
-            fullEvent.getStart()
+            fullEvent.getStartInstant()
         );
 
         if(media != null) {
@@ -88,7 +104,7 @@ public class ScheduleEventView {
             }
         }
 
-        simpleEvent.duration = fullEvent.getDuration() == null ? null : new Date(fullEvent.getDuration().toMillis());
+        simpleEvent.duration = fullEvent.getDuration();
         simpleEvent.setRerunEvent(fullEvent);
 
 
@@ -105,10 +121,10 @@ public class ScheduleEventView {
         }
         ScheduleEventView simpleEvent = new ScheduleEventView(
             fullEvent.getChannel(), fullEvent.getNet(),
-            fullEvent.getStart()
+            fullEvent.getStartInstant()
         );
 
-        simpleEvent.duration = fullEvent.getDuration() == null ? null : new Date(fullEvent.getDuration().toMillis());
+        simpleEvent.duration = fullEvent.getDuration();
         simpleEvent.setRerunEvent(fullEvent);
 
         List<Broadcaster> bc = fullEvent.getParent() == null ? null : fullEvent.getParent().getBroadcasters();
@@ -124,60 +140,5 @@ public class ScheduleEventView {
     private void setRerunEvent(ScheduleEvent fullEvent) {
         this.isRerun = ScheduleEvents.isRerun(fullEvent);
     }
-
-    public String getChannel() {
-        return channel;
-    }
-
-    public String getChannelText() {
-        return channelText;
-    }
-
-
-    public String getNet() {
-        return net;
-    }
-
-    public String getNetText() {
-        return netText;
-    }
-
-    public Date getStart() {
-        return start;
-    }
-
-    public void setStart(Date start) {
-        this.start = start;
-    }
-
-    public Date getDuration() {
-        return duration;
-    }
-
-    public Long getMediaId() {
-        return mediaId;
-    }
-
-    public void setMediaId(Long mediaId) {
-        this.mediaId = mediaId;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public boolean isRerun() {
-        return isRerun;
-    }
-    public void setRerun(boolean b) {
-        this.isRerun = b;
-    }
-
-    public List<String> getBroadcasters() {
-        return broadcasters;
-    }
+   
 }
